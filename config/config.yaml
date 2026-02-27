@@ -1,0 +1,10 @@
+datasets:
+  - name: "air_travel_stats"
+    url: "https://people.sc.fsu.edu/~jburkardt/data/csv/airtravel.csv"
+    file_type: "csv"
+    load_mode: "INCREMENTAL" # Options: FULL, INCREMENTAL
+    target_stg: "stg_airtravel"
+
+storage:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
