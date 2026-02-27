@@ -1,6 +1,7 @@
 import os
 import logging
 import psycopg2
+import streamlit as st
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
@@ -13,19 +14,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def load_validated_env():
-    """Loads and validates database environment variables from project root."""
+    """Loads and validates database environment variables. Checks st.secrets first, then .env."""
+    required_vars = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"]
+    
+    # 1. Check Streamlit Secrets (for Cloud Deployment)
+    try:
+        if hasattr(st, "secrets") and all(k in st.secrets for k in required_vars):
+            logger.info("Using Streamlit Secrets for database connection.")
+            return {v: st.secrets[v] for v in required_vars}
+    except Exception:
+        pass # Not running in streamlit or secrets not set
+
+    # 2. Check local .env (for Local Development)
     root_path = Path(__file__).resolve().parents[1]
     env_path = root_path / ".env"
     
     if not env_path.exists():
-        logger.error(f".env file not found at {env_path}")
-        raise FileNotFoundError(f".env file missing at {env_path}")
-
-    load_dotenv(dotenv_path=env_path)
+        logger.warning(f".env file not found at {env_path}. Fallback to OS environment.")
+    else:
+        load_dotenv(dotenv_path=env_path)
     
-    required_vars = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"]
     missing = [v for v in required_vars if not os.getenv(v)]
-    
     if missing:
         msg = f"Missing environment variables: {', '.join(missing)}"
         logger.error(msg)
