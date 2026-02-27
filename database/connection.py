@@ -52,6 +52,7 @@ def get_connection():
             dbname=creds["DB_NAME"],
             user=creds["DB_USER"],
             password=creds["DB_PASSWORD"],
+            sslmode="require",
             connect_timeout=10
         )
         return conn
