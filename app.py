@@ -284,6 +284,9 @@ elif page == "Source Config":
         creds = load_validated_env()
         st.success(f"Connected to Database Host: `{creds['DB_HOST']}`")
         st.info(f"Database Name: `{creds['DB_NAME']}` | User: `{creds['DB_USER']}`")
+        # Diagnostic: Show password length to check for hidden spaces
+        pw_len = len(creds['DB_PASSWORD'])
+        st.warning(f"Password Diagnostic: Length is **{pw_len}** characters (Check if this matches your local .env length)")
     except Exception as e:
         st.error(f"Connection Configuration Error: {e}")
 
