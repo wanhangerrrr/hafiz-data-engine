@@ -139,6 +139,7 @@ st.markdown("""
 # Data Fetching Logic
 @st.cache_data(ttl=60)
 def fetch_warehouse_data():
+    conn = None
     try:
         conn = get_connection()
         query = """
@@ -148,21 +149,26 @@ def fetch_warehouse_data():
             ORDER BY f.year_val, d.month_id;
         """
         df = pd.read_sql(query, conn)
-        conn.close()
         return df
     except Exception as e:
+        st.error(f"Warehouse Error: {e}")
         return pd.DataFrame()
+    finally:
+        if conn: conn.close()
 
 @st.cache_data(ttl=30)
 def fetch_pipeline_stats():
+    conn = None
     try:
         conn = get_connection()
         history = pd.read_sql("SELECT * FROM pipeline_run_history ORDER BY start_time DESC LIMIT 10", conn)
         ingestion = pd.read_sql("SELECT status, COUNT(*) as count FROM ingestion_log GROUP BY status", conn)
-        conn.close()
         return history, ingestion
     except Exception as e:
+        st.error(f"Monitor Error: {e}")
         return pd.DataFrame(), pd.DataFrame()
+    finally:
+        if conn: conn.close()
 
 # Sidebar Setup
 with st.sidebar:
@@ -270,16 +276,24 @@ elif page == "System Health":
         st.progress(rate/100)
 
 elif page == "Source Config":
-    st.title("🔧 Source Connectivity")
-    st.markdown("Configuration management for public endpoints.")
+    st.title("🔧 Source & Cloud Connectivity")
+    st.markdown("Configuration management for data endpoints and warehouse connectivity.")
+    
+    from database.connection import load_validated_env
+    try:
+        creds = load_validated_env()
+        st.success(f"Connected to Database Host: `{creds['DB_HOST']}`")
+        st.info(f"Database Name: `{creds['DB_NAME']}` | User: `{creds['DB_USER']}`")
+    except Exception as e:
+        st.error(f"Connection Configuration Error: {e}")
+
+    st.divider()
+    st.markdown("### Active Source")
     st.code("""
-    # Current Active Source
     DATASET: Air Travel Statistics
     URL: https://people.sc.fsu.edu/.../airtravel.csv
     STRATEGY: Incremental Load
     """, language="yaml")
-    st.divider()
-    st.write("Database connectivity: **CONNECTED** (PostgreSQL 15 @ 5433)")
 
 # Sticky Footer
 st.markdown("---")
