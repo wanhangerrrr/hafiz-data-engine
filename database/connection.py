@@ -46,15 +46,9 @@ def get_connection():
     """Returns a production-ready PostgreSQL connection."""
     try:
         creds = load_validated_env()
-        conn = psycopg2.connect(
-            host=creds["DB_HOST"],
-            port=creds["DB_PORT"],
-            dbname=creds["DB_NAME"],
-            user=creds["DB_USER"],
-            password=creds["DB_PASSWORD"],
-            sslmode="require",
-            connect_timeout=10
-        )
+        # Use DSN string for best compatibility with Neon pooler/SSL
+        dsn = f"postgresql://{creds['DB_USER']}:{creds['DB_PASSWORD']}@{creds['DB_HOST']}:{creds['DB_PORT']}/{creds['DB_NAME']}?sslmode=require"
+        conn = psycopg2.connect(dsn, connect_timeout=10)
         return conn
     except Exception as e:
         logger.error(f"Failed to connect to database: {e}")
