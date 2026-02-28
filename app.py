@@ -3,10 +3,12 @@ import pandas as pd
 import plotly.express as px
 from database.connection import get_connection
 from datetime import datetime
+import base64
+import os
 
 # Page Configuration
 st.set_page_config(
-    page_title="Data Platform | Muhammad Hafiz Fassya",
+    page_title="Diamond Analytics Hub | Muhammad Hafiz Fassya",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -136,6 +138,22 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# Image Helper
+def get_profile_image():
+    # Base directory of the current script
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Priority: assets/profile.jpg -> assets/profile.png -> assets/profile.jpeg
+    extensions = ["jpg", "png", "jpeg"]
+    for ext in extensions:
+        img_path = os.path.join(base_dir, "assets", f"profile.{ext}")
+        if os.path.exists(img_path):
+            with open(img_path, "rb") as f:
+                data = f.read()
+            return f"data:image/{ext};base64,{base64.b64encode(data).decode()}"
+    
+    return "https://img.icons8.com/bubbles/100/000000/administrator-male.png"
+
 # Data Fetching Logic
 @st.cache_data(ttl=60)
 def fetch_warehouse_data():
@@ -172,9 +190,10 @@ def fetch_pipeline_stats():
 
 # Sidebar Setup
 with st.sidebar:
-    st.markdown("""
+    profile_img = get_profile_image()
+    st.markdown(f"""
         <div class="profile-card">
-            <img src="https://img.icons8.com/bubbles/100/000000/administrator-male.png" width="80">
+            <img src="{profile_img}" width="80" style="border-radius: 50%; object-fit: cover; height: 80px;">
             <div class="profile-name">Muhammad Hafiz Fassya</div>
             <div style="font-size: 0.75rem; opacity: 0.8;">Lead Data Engineer</div>
         </div>
@@ -189,7 +208,7 @@ with st.sidebar:
 
 # Routing
 if page == "Diamond Dashboard":
-    st.markdown('<h1 class="hero-title">Nexus Analytics Platform</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="hero-title">Diamond Analytics Hub</h1>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Real-time automation from Raw Ingestion to Analytical Warehouse.</p>', unsafe_allow_html=True)
     
     df = fetch_warehouse_data()
